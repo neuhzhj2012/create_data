@@ -4,10 +4,15 @@
 '''
 import os
 import cv2
+import uuid
 import random
+import gevent
+import numpy as np
 from PIL import Image
 from lxml import etree, objectify
 import xml.etree.ElementTree as ET
+from multiprocessing import Process
+from gevent import monkey
 
 labels = ['ABT', 'Agile-Automotive', 'ALPINA', 'Apollo', 'ARCFOX', 'BAC', 'Caterham', \
           'Dacia', 'Datsun', 'Donkervoort', 'Faraday Future', 'Fisker', 'FM-Auto', 'GAZ', \
@@ -106,22 +111,22 @@ def parseXml(xml_path):
     return basic_info,class_loc
 
 def parseXmlOne(xml_name,xml_folder, img_folder,dst_folder):
-    #try:
-    if True:
+    try:
+    #if True:
         xml_abspath = os.path.join(xml_folder, xml_name)
         basic_info, parts = parseXml(xml_abspath)
-        assert len(parts) != 0,"##{} has no objects##".format(xml_name)
+        assert len(parts) != 0, "##{} has no objects##".format(xml_name)
 
         img_name = xml_name.replace('xml', 'jpg')
         img_abspath = os.path.join(img_folder, img_name)
-        #if not os.path.exists(img_abspath):
-            #img_abspath = img_abspath.replace('jpg', 'JPG')
+        # if not os.path.exists(img_abspath):
+        # img_abspath = img_abspath.replace('jpg', 'JPG')
         img = Image.open(img_abspath)
         img_w = basic_info['width']
         img_h = basic_info['height']
 
-        dst_name = img_name
-        basic_info['folder'] = 'paste'
+        dst_name = 'cp_' + img_name
+        basic_info['folder'] = 'copypaste'
         basic_info['filename'] = dst_name
         anno_tree = writeXmlRoot(basic_info)
         jpg_path = os.path.join(dst_folder, dst_name)
@@ -132,8 +137,13 @@ def parseXmlOne(xml_name,xml_folder, img_folder,dst_folder):
                 xmin, ymin, xmax, ymax = loc
                 w_box = xmax - xmin
                 h_box = ymax - ymin
-                w_list +=list(range(xmin, xmax))
-                h_list +=list(range(ymin, ymax)) #已经有logo的区域
+                w_list += list(range(xmin, xmax))
+                h_list += list(range(ymin, ymax))  # 已经有logo的区域
+                object = dict()
+                object['class_name'] = obj  # 更新标注label为logo_id
+                object['bndbox'] = list()
+                object['bndbox'] = [xmin, ymin, xmax, ymax]
+                anno_tree.append(writeXmlSubRoot(object, bbox_type='xyxy'))
         img_w_list = list(range(img_w))
         img_h_list = list(range(img_h))
         w_list = list(set(img_w_list) - set(w_list))
@@ -141,48 +151,65 @@ def parseXmlOne(xml_name,xml_folder, img_folder,dst_folder):
         num_paste = 10
         step = 30
 
-        num_paste = min((min(len(w_list), len(h_list))/step), num_paste) #最少复制数量
+        num_paste = min((min(len(w_list), len(h_list)) / step), num_paste)  # 最少复制数量
         w_list_pst = list()
         h_list_pst = list()
-        for i in list(range(int(len(w_list)/step) - 1)):
-            w_list_pst.append(random.sample(w_list[i*step:(i+1)*step], 1))
-        for j in list(range(int(len(w_list)/step))):
-            h_list_pst.append(random.sample(h_list[i * step:(i + 1) * step], 1))
+        for i in list(range(int(len(w_list) / step) - 1)):
+            w_list_pst.append(random.sample(w_list[i * step:(i + 1) * step], 1))
+        for j in list(range(int(len(h_list) / step) - 1)):
+            h_list_pst.append(random.sample(h_list[j * step:(j + 1) * step], 1))
 
+        random.shuffle(w_list_pst)
+        random.shuffle(h_list_pst)
+        img_cp = img.copy()
+        for x, y in zip(w_list_pst, h_list_pst):
+            x=x[0]
+            y=y[0]
+            label = random.sample(parts.keys(), 1)[0]
+            print(x, y)
+            box = random.sample(parts[label], 1)[0]
+            x1, y1, x2, y2 = box
+            box_w = x2 - x1
+            box_h = y2 - y1
+            if (x+box_w >= img_w) or (y+box_h >= img_h):
+                print('invalid: ',x, box_w, img_w, y)
+                continue
+            img_crop = img_cp.crop(box)
+            img_cp.paste(img_crop, (x, y))
+            object = dict()
+            object['class_name'] = label  # 更新标注label为logo_id
+            object['bndbox'] = list()
+            object['bndbox'] = [x, y, x + box_w, y + box_h]
+            anno_tree.append(writeXmlSubRoot(object, bbox_type='xyxy'))
 
-            # img_cover = Image.new('RGB', (w_box, h_box), (255, 255, 255)) #覆盖原区域
-            # img.paste(img_cover, (xmin, ymin))
-            # logo_path = random.sample(logos, 1)[0]
-            # img_logo = Image.open(logo_path)
-            # #img_logo = img_logo.resize((w_box, h_box))
-            # logo_name = os.path.basename(logo_path).split('.')[0]
-            # logo_id = labels.index(logo_name)
-            #
-            # max_edge = max(w_box, h_box)
-            # min_edge_logo = min(img_logo.width, img_logo.height)
-            # ratio_logo = img_logo.width * 1.0/img_logo.height
-            # if min_edge_logo == img_logo.width: #logo的短边覆盖原标注区域的场边
-            #     logo_new_width = max_edge
-            #     logo_new_height = int(logo_new_width*1.0 / ratio_logo)
-            # else:
-            #     logo_new_height = max_edge
-            #     logo_new_width = int(logo_new_height * ratio_logo)
-            #
-            # img_logo = img_logo.resize((logo_new_width, logo_new_height))
-            # #img_cover = Image.new('RGB', (w_box, h_box), (255, 255, 255))
-            # #img.paste(img_cover, (xmin, ymin))
-            # img.paste(img_logo, (xmin, ymin), img_logo.split()[-1])
-            #
-            # object = dict()
-            # object['class_name'] = logo_id #更新标注label为logo_id
-            # object['bndbox'] = list()
-            # object['bndbox'] = [xmin, ymin, xmin+logo_new_width, ymin+logo_new_height]
-            # anno_tree.append(writeXmlSubRoot(object, bbox_type='xyxy'))
-        img.save(jpg_path)
-        writeXml(anno_tree, os.path.join(dst_folder, dst_name.replace('jpg', 'xml')))
-    #except:
-    else:
+        img_cp.save(jpg_path)
+        writeXml(anno_tree, os.path.join(jpg_path.replace('jpg', 'xml')))
+    except:
+    #else:
         print ('##{} error##', xml_name)
+
+def process_start(xml_list,xml_folder, img_folder,dst_folder):
+    tasks = []
+    for idx, xmlinfo in enumerate(xml_list):
+        tasks.append(gevent.spawn(parseXmlOne, xmlinfo,xml_folder, img_folder,dst_folder))
+    gevent.joinall(tasks)  # 使用协程来执行
+
+def task_start(filepaths, batch_size=5, xml_folder='./Annotations', img_folder='JPEGImages', dst_folder='./tmp'):  # 每batch_size条filepaths启动一个进程
+    num=len(filepaths)
+
+    if not os.path.exists(dst_folder):
+        os.makedirs(dst_folder)
+
+    for idx in range(num // batch_size):
+        url_list = filepaths[idx * batch_size:(idx + 1) * batch_size]
+        p = Process(target=process_start, args=(url_list,xml_folder, img_folder,dst_folder,))
+        p.start()
+
+    if num % batch_size > 0:
+        idx = num // batch_size
+        url_list = filepaths[idx * batch_size:]
+        p = Process(target=process_start, args=(url_list, xml_folder, img_folder, dst_folder,))
+        p.start()
 
 def getAllFiles(folder):
     rtn = list()
@@ -204,41 +231,5 @@ if __name__=='__main__':
     exit()
 
     for xml_name in xmls:
-        xml_abspath = os.path.join(xml_folder, xml_name)
-        basic_info, parts = parseXml(xml_abspath)
-        assert len(parts) != 0, "##{} has no objects##".format(xml_name)
-
-        img_name = xml_name.replace('xml', 'jpg')
-        img_abspath = os.path.join(img_folder, img_name)
-        if not os.path.exists(img_abspath):
-            img_abspath = img_abspath.replace('jpg', 'JPG')
-        img = Image.open(img_abspath)
-        img_w = basic_info['width']
-        img_h = basic_info['height']
-
-        dst_name = xml_name[:-4] + "_" + str(uuid.uuid4())[:4] + '.jpg'
-        basic_info['folder'] = 'cover'
-        basic_info['filename'] = dst_name
-        anno_tree = writeXmlRoot(basic_info)
-        jpg_path = os.path.join(dst_folder, dst_name)
-        for obj, locs in parts.items():  # 扩充roi区域并生成新xml文件
-            for idx, loc in enumerate(locs):
-                xmin, ymin, xmax, ymax = loc
-                w_box = xmax - xmin
-                h_box = ymax - ymin
-                logo_path = random.sample(logos, 1)[0]
-                img_logo = Image.open(logo_path)
-                img_logo = img_logo.resize((w_box, h_box))
-                logo_name = os.path.basename(logo_path).split('.')[0]
-                logo_id = labels.index(logo_name)
-
-                img.paste(img_logo, (xmin, ymin), img_logo.split()[-1])
-
-                object = dict()
-                object['class_name'] = logo_id  # 更新标注label为logo_id
-                object['bndbox'] = list()
-                object['bndbox'] = [xmin, ymin, xmax, ymax]
-                anno_tree.append(writeXmlSubRoot(object, bbox_type='xyxy'))
-        img.save(jpg_path)
-        writeXml(anno_tree, os.path.join(dst_folder, dst_name.replace('jpg', 'xml')))
+        parseXmlOne(xml_name, xml_folder, img_folder, dst_folder)
 
