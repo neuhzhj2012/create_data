@@ -69,19 +69,7 @@ def draw(img_pil,element, cord):
     return img_draw
 
 
-labels = ['ABT', 'Agile-Automotive', 'ALPINA', 'Apollo', 'ARCFOX', 'BAC', 'Caterham', \
-          'Dacia', 'Datsun', 'Donkervoort', 'Faraday Future', 'Fisker', 'FM-Auto', 'GAZ', \
-          'GLM', 'GMC', 'GTA', 'Gumpert', 'Hennessey', 'Italdesign', 'Jeep', 'KTM', \
-          'Lorinser', 'Lucid', 'MAGNA', 'Mazzanti', 'MELKUS', 'MINI', 'Polestar', 'RENOVO', \
-          'Scion', 'SIN CARS', 'SSC', 'TOROIDION', 'TVR', 'Venturi', 'YAMAHA', 'Zenvo', \
-          '阿尔法·罗密欧', '阿斯顿·马丁', '艾康尼克', '奥迪', '保斐利', '北汽制造', '奔驰', \
-          '比亚迪', '布加迪', '成功汽车', '大迪', '道奇', '东风', '法拉利', '菲亚特', '丰田', \
-          '福田', '哈弗', '悍马', '恒天', '红旗', '华利', '华普', '华泰', '黄海', '佳跃', \
-          '江铃', '金龙', '金旅', '卡尔森', '卡升', '卡威', '开瑞', '凯佰赫', '凯翼', '兰博基尼',\
-          '蓝旗亚', '朗世', '劳斯莱斯', '雷诺三星', '路虎', '路特斯', '绿驰', '玛莎拉蒂', \
-          '摩根', '启辰', '日产', '荣威', '萨博', '上海', '世爵', '曙光汽车', '思铭', '斯太尔', \
-          '蔚来', '沃尔沃', '五十铃', '现代中国', '鑫源', '一汽吉林', '依维柯', '正道汽车', \
-          '中兴']
+labels = ['ABT', 'AC-Schnitzer', 'Agile-Automotive', 'ALPINA', 'Apollo', 'Arash', 'ARCFOX', 'BAC', 'Caterham', 'Conquest', 'Dacia', 'Datsun', 'DMC', 'Donkervoort', 'DS', 'Faraday Future', 'Fisker', 'FM-Auto', 'GAZ', 'GLM', 'GMC', 'GTA', 'Gumpert', 'Hennessey', 'Icona', 'Inferno', 'Italdesign', 'Jannarelly', 'Jeep', 'KTM', 'LeSEE', 'LOCAL MOTORS', 'Lorinser', 'Lucid', 'LUXGEN', 'MAGNA', 'Mahindra', 'Mazzanti', 'MELKUS', 'MINI', 'Moia', 'nanoFLOWCELL', 'NEVS', 'Noble', 'Polestar', 'Radical', 'RENOVO', 'Rezvani', 'Rimac', 'Rinspeed', 'Scion', 'SIN CARS', 'smart', 'SPIRRA', 'SSC', 'SWM斯威汽车', 'TOROIDION', 'Tramontana', 'TVR', 'Vanda Electric', 'Venturi', 'VLF-Automotive', 'WEY', 'W-Motors', 'YAMAHA', 'Zenvo', '阿尔法·罗密欧', '阿斯顿·马丁', '艾康尼克', '安凯客车', '奥迪', '巴博斯', '拜腾', '宝骏', '宝马', '宝腾', '宝沃', '保斐利', '保时捷', '北京', '北汽道达', '北汽幻速', '北汽绅宝', '北汽威旺', '北汽制造', '奔驰', '本田', '比速汽车', '比亚迪', '标致', '别克', '宾利', '宾尼法利纳', '布加迪', '昌河汽车', '昶洧', '车和家', '成功汽车', '大迪', '大发', '大众', '道奇', '电咖', '东风', '东风启辰', '东风英菲尼迪', '东南', '法拉利', '菲亚特', '丰田', '弗那萨利', '福迪汽车', '福汽新龙马', '福特', '福田', '福田乘用车', '谷歌', '观致', '光冈', '广汽传祺', '广汽吉奥', '广汽新能源', '广通客车', '国金汽车', '哈飞', '哈飞汽车', '哈弗', '海格', '海马', '汉腾汽车', '悍马', '合众', '恒天', '红旗', '华晨华颂', '华晨金杯', '华晨中华', '华凯', '华利', '华普', '华颂', '华泰', '黄海', '霍顿', '吉利帝豪', '吉利汽车', '吉利全球鹰', '吉利英伦', '佳跃', '江淮汽车', '江铃', '江铃集团轻汽', '捷豹', '捷途', '金龙', '金旅', '九龙', '君马汽车', '卡尔森', '卡升', '卡威', '卡威汽车', '开利', '开瑞', '开瑞汽车', '凯佰赫', '凯迪拉克', '凯翼', '康迪全球鹰电动汽车', '科尼赛克', '克莱斯勒中国', '坤行汽车', '拉达', '兰博基尼', '蓝旗亚', '朗世', '劳斯莱斯', '雷丁', '雷克萨斯', '雷诺', '雷诺三星', '理念', '力帆汽车', '莲花汽车', '猎豹汽车', '林肯', '铃木', '零跑汽车', '领克', '领志', '陆地方舟', '陆风汽车', '路虎', '路特斯', '绿驰', '玛莎拉蒂', '迈巴赫', '迈凯伦', '明君汽车', '摩根', '纳智捷', '南京金龙', '南京依维柯', '讴歌', '欧宝', '欧联', '帕加尼', '佩奇奥', '奇点汽车', '奇瑞', '奇瑞新能源', '祺智', '启辰', '前途汽车', '乔治·巴顿', '庆铃汽车', '日产', '荣威', '如虎', '瑞驰新能源', '瑞迈', '萨博', '赛麟', '厦门金龙', '厦门金旅', '陕汽通家', '上海', '上汽大通', '上汽集团', '上汽通用别克', '世爵', '首望', '曙光汽车', '双环', '双龙', '思铭', '斯巴鲁', '斯达泰克', '斯柯达', '斯太尔', '苏州金龙', '塔塔', '泰卡特', '泰克鲁斯·腾风', '特斯拉', '腾势', '威马汽车', '威蒙积泰', '威兹曼', '潍柴英致', '蔚来', '沃尔沃', '沃克斯豪尔', '五菱', '五十铃', '西雅特', '夏利', '现代中国', '小鹏汽车', '鑫源', '雪佛兰', '雪铁龙', '野马汽车', '一汽海马', '一汽红旗', '一汽吉林', '一汽马自达', '依维柯', '蓥石', '永源汽车', '游侠', '宇通客车', '驭胜', '御捷', '裕路', '云度', '云雀', '长安', '长安标致雪铁龙', '长安跨越', '长安铃木', '长安欧尚', '长安汽车', '长安轻型车', '长城汽车', '长江EV', '浙江卡尔森', '正道汽车', '之诺', '知豆电动车', '中兴', '众泰汽车']
 
 
 if __name__ == '__main__':
@@ -93,13 +81,13 @@ if __name__ == '__main__':
         os.makedirs(jpg_folder)
 
 
-    logo_folder = 'C:\\Users\\huangzhongjie\\Desktop\\select'
+    logo_folder = 'D:\\Autohome\\carlogo\\Data\\Logos_select'
     logos = getAllFiles(logo_folder)
 
     resolution_list = [240, 360,480,560,640,720,960,1280]
     num_list = list(range(3,7)) #水平方向上的logo数量
 
-    for _ in list(range(10)):
+    for _ in list(range(790)):
         name = str(uuid.uuid4())
         jpg_path = os.path.join(jpg_folder, name+'.jpg')
         xml_path = os.path.join(xml_folder, name+'.xml')
