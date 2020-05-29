@@ -43,7 +43,7 @@ class MYFONT():
         pil_img = Image.new('RGB', (img_w, img_h), (255, 255, 255))
         return pil_img
 
-    def getTxtPartBase(self, imgwh, txt, txt_cord, txt_font):
+    def getTxtPartBase(self, pil_img, txt, txt_cord, txt_font):
         '''
         将文字写在图片上，白底黑字
         :param imgwh: 目标图分辨率
@@ -52,7 +52,6 @@ class MYFONT():
         :param txt_font: 对应字体
         :return: 结果图
         '''
-        pil_img = self.getAlphaNewImage(imgwh)
         pil_img_draw = ImageDraw.Draw(pil_img)
 
         # for idx in range(len(txts)):
