@@ -13,9 +13,9 @@ class CONT():
         remainder = num % len(conts) #余数
         rst = ''
         for i in list(range(step)):
-            rst += random.sample(conts, len(conts))[0]
+            rst += ''.join(random.sample(conts, len(conts)))
         if remainder > 0:
-            rst + random.sample(conts, remainder)[0]
+            rst += ''.join(random.sample(conts, remainder))
         return rst
     def getChinese(self, num): #指定类型的数据
         return self.__getRandomContent__(self.chinese, num)
