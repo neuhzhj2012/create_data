@@ -1,9 +1,28 @@
 #encoding: utf-8
-import os
+import os, cv2
 import uuid
 import random
+
+import numpy as np
+import matplotlib.pyplot as plt
+from PIL import Image, ImageFilter
 from load_ttf import MYFONT
 from get_content import CONT
+
+from skimage import util
+
+def addNoise(img_pil, mode='gaussian'):
+    ''':arg
+    mode: gaussian, salt, pepper, s & p, speckle
+    '''
+    img = np.array(img_pil)
+    noise_img = util.random_noise(img, mode=mode)
+    plt.subplot(2, 3, 1), plt.title("original")
+    # plt.imshow(noise_img)
+    # plt.show()
+    # cv2.imshow('noise',noise_img)
+    # cv2.waitKey(0)
+    return  Image.fromarray(noise_img.astype('uint8'), 'RGB')
 
 if __name__ == '__main__':
     ttf_folder = 'data/font'
@@ -15,7 +34,7 @@ if __name__ == '__main__':
     h_txt_range=list(range(18, 50)) #文字高度范围
 
     num_create = 5 #总的图片数
-    num_conts = 7 #单张图片上文字区域
+    num_conts = 15 #单张图片上文字区域
     width_char = 30#单字符的宽度
 
 
@@ -32,6 +51,9 @@ if __name__ == '__main__':
 
 
         img_pil = fontObj.getAlphaNewImage(imgwh)
+        # img_pil = addNoise(img_pil)
+
+        # img_pil = img_pil.filter(ImageFilter.BLUR)
         for x, y in zip(w_list, h_list):
             w_cont = random.sample(list(range(x, imgwh[0]-width_char)), 1)[0] #当前文本的宽高信息
             h_cont = random.sample(h_txt_range, 1)[0]
@@ -51,42 +73,11 @@ if __name__ == '__main__':
                 txt_cord = (txt_cord[0] + imgwh[0] - txt_cord[2], txt_cord[1] + y, txt_cord[2], txt_cord[3])
             else:
                 txt_cord = (txt_cord[0] + x, txt_cord[1] + y, txt_cord[2], txt_cord[3])
-            # txt_cord = (txt_cord[0] + x, txt_cord[1] + y, min(txt_cord[2], imgwh[0] - x), txt_cord[3]) #截断文字
-            print(txt_cord, txt_cord[0]+txt_cord[2], len(txt), txt)
+            # print(txt_cord, txt_cord[0]+txt_cord[2], len(txt), txt)
 
             img_pil = fontObj.getTxtPartBase(img_pil, txt, txt_cord, txt_font)
             # img_pil.save(os.path.join(dst_folder, str(uuid.uuid4()) + '.jpg'))
             # img_pil.show()
+        img_pil = addNoise(img_pil)
         img_pil.save(os.path.join(dst_folder, str(uuid.uuid4()) + '.jpg'))
 
-    # for province in provinces: #当前省份内数据扩大10倍
-    #     for alpha in contObj.get_province_altha(province) * 50: #每个城市字母下生成500个
-    #         nums_3 = ''.join(random.sample(nums, 3)) #3个数字
-    #         alpha_2 = ''.join(random.sample(alphas, 2)) #2个字母
-    #         tmp = nums_3 + alpha_2
-    #         combs_1 = ''.join(random.sample(tmp,len(tmp)))
-    #
-    #         nums_4 = ''.join(random.sample(nums, 4)) #4个数字
-    #         alpha_1 = ''.join(random.sample(alphas, 1)) #2个字母 #1个字母
-    #         tmp = nums_4 + alpha_1
-    #         combs_2 = ''.join(random.sample(tmp,len(tmp)))
-    #
-    #         nums_5 = ''.join(random.sample(nums, 5)) #全数字
-    #         tmp = nums_5 + alpha_1
-    #         combs_3 = ''.join(random.sample(tmp,len(tmp)))
-    #         nums_6 = ''.join(random.sample(nums, 6)) #新能源
-    #         combs_4 = nums_5
-    #         combs_5 = nums_6
-    #         txts = [province + alpha + combs_1,province + alpha + combs_2,
-    #                 province + alpha + combs_3,province + alpha + combs_4,
-    #                 province + alpha + combs_5]
-    #         for txt in txts:
-    #             print (txt)
-    #             txt_font = random.sample(fonts, 1)[0]
-    #             if len(txt) == 8:
-    #                 txt_font = txt_font.font_variant(size=20, encoding='unic')
-    #                 # print (txt_font.size)
-    #             txt_cord = fontObj.get_txt_cord(txt, txt_font)
-    #             img_pil = fontObj.get_txt_part_base(imgwh, txt, txt_cord, txt_font)
-    #             # img_pil.show()
-    #             img_pil.save(os.path.join(dst_folder, txt + '.jpg'))
