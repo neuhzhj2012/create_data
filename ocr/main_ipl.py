@@ -17,12 +17,27 @@ def addNoise(img_pil, mode='gaussian'):
     '''
     img = np.array(img_pil)
     noise_img = util.random_noise(img, mode=mode)
-    plt.subplot(2, 3, 1), plt.title("original")
-    # plt.imshow(noise_img)
-    # plt.show()
-    # cv2.imshow('noise',noise_img)
-    # cv2.waitKey(0)
     return  Image.fromarray(noise_img.astype('uint8'), 'RGB')
+def addPerspective(img_pil):
+    params = [1 - float(random.randint(1, 2)) / 100,
+              0,
+              0,
+              0,
+              1 - float(random.randint(1, 10)) / 100,
+              float(random.randint(1, 2)) / 500,
+              0.001,
+              float(random.randint(1, 2)) / 500
+              ]
+    img_pil = img_pil.transform((img_pil.width, img_pil.height), Image.PERSPECTIVE, params)  # 创建扭曲,
+    return img_pil
+def addRotate(img_pil):
+    return img_pil.rotate(15) #旋转过的位置造成黑底区域
+def addFilder(img_pil):
+    # img_pil = img_pil.filter(ImageFilter.EDGE_ENHANCE_MORE)
+    # img_pil = img_pil.filter(ImageFilter.BLUR)
+    return img_pil.filter(ImageFilter.BLUR)
+
+
 
 if __name__ == '__main__':
     ttf_folder = 'data/font'
@@ -30,7 +45,7 @@ if __name__ == '__main__':
     fontObj = MYFONT(ttf_folder) #字库
     contObj = CONT() #文字内容
     fonts = fontObj.getFonts()
-    imgwh = [640, 480]
+    imgwh = (640, 480)
     h_txt_range=list(range(18, 50)) #文字高度范围
 
     num_create = 5 #总的图片数
@@ -43,17 +58,18 @@ if __name__ == '__main__':
         # w_list = random.sample(list(range(0, imgwh[0]-width_char)), num_conts ) #起点位置
         # h_list = random.sample(list(range(imgwh[1])), num_conts ) #造成垂直方向上字符重叠
 
-        w_list=random.sample(list(range(int(imgwh[0] / width_char) - 1)), num_conts)
+        w_list=random.sample(list(range(int(imgwh[0]/width_char) - 1)), num_conts)
         w_list = [k * width_char for k in w_list]
 
         h_list=random.sample(list(range(int(imgwh[1] / width_char) - 1)), num_conts)
         h_list = [k * width_char for k in h_list]
 
 
-        img_pil = fontObj.getAlphaNewImage(imgwh)
-        # img_pil = addNoise(img_pil)
+        img_pil = fontObj.getNewImage(imgwh)
+        # img_pil.save('while.png')
+        jpg_name = str(uuid.uuid4()) + '.jpg'
+        gt_txt_name = 'gt_' + jpg_name.replace('.jpg', '.txt')
 
-        # img_pil = img_pil.filter(ImageFilter.BLUR)
         for x, y in zip(w_list, h_list):
             w_cont = random.sample(list(range(x, imgwh[0]-width_char)), 1)[0] #当前文本的宽高信息
             h_cont = random.sample(h_txt_range, 1)[0]
@@ -69,15 +85,23 @@ if __name__ == '__main__':
             if len(txt) == 8:
                 fontObj.setFontSize(txt_font, 20)
             txt_cord = fontObj.getTxtCord(txt, txt_font)
-            if (imgwh[0] - x - txt_cord[2] < 0): #需要换行,此时修改起始坐标
-                txt_cord = (txt_cord[0] + imgwh[0] - txt_cord[2], txt_cord[1] + y, txt_cord[2], txt_cord[3])
-            else:
-                txt_cord = (txt_cord[0] + x, txt_cord[1] + y, txt_cord[2], txt_cord[3])
-            # print(txt_cord, txt_cord[0]+txt_cord[2], len(txt), txt)
 
-            img_pil = fontObj.getTxtPartBase(img_pil, txt, txt_cord, txt_font)
+            # print(txt_cord, txt_cord[0]+txt_cord[2], len(txt), txt)
+            img_pil_ele = fontObj.getTxtPartBase(txt, txt_cord, txt_font) #当前字符串元素
+            # img_pil_ele.save('tmp.png')
+            if (imgwh[0] - x - txt_cord[2] < 0): #需要换行,此时修改起始坐标
+                txt_cord = (txt_cord[0] + imgwh[0] - txt_cord[2], txt_cord[1] + y,img_pil_ele.width, img_pil_ele.height)
+            else:
+                txt_cord = (txt_cord[0] + x, txt_cord[1] + y, img_pil_ele.width, img_pil_ele.height)
+            x1,y1 = txt_cord[0], txt_cord[1]
+            tmp = fontObj.mergeElewithRoi(img_pil_ele, img_pil, (x1, y1))
+            buffs = '{},{},{},{},{},{},{},{},{}\n'.format(x1, y1, x1+txt_cord[2], y1, x1+txt_cord[2], y1+txt_cord[3], x1, y1+txt_cord[3], txt)
+            with open(os.path.join(dst_folder, gt_txt_name), 'a+', encoding='utf-8') as fp:
+                fp.write(buffs)
             # img_pil.save(os.path.join(dst_folder, str(uuid.uuid4()) + '.jpg'))
-            # img_pil.show()
-        img_pil = addNoise(img_pil)
-        img_pil.save(os.path.join(dst_folder, str(uuid.uuid4()) + '.jpg'))
+        # img_pil = addNoise(img_pil)
+        # img_pil = addRotate(img_pil)
+        # img_pil = addFilder(img_pil)
+
+        img_pil.save(os.path.join(dst_folder, jpg_name))
 
