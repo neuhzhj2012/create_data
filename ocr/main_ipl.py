@@ -48,6 +48,9 @@ if __name__ == '__main__':
     imgwh = (640, 480)
     h_txt_range=list(range(18, 50)) #文字高度范围
 
+    if not os.path.exists(dst_folder):
+        os.makedirs(dst_folder)
+
     num_create = 5 #总的图片数
     num_conts = 15 #单张图片上文字区域
     width_char = 30#单字符的宽度
@@ -58,6 +61,7 @@ if __name__ == '__main__':
         # w_list = random.sample(list(range(0, imgwh[0]-width_char)), num_conts ) #起点位置
         # h_list = random.sample(list(range(imgwh[1])), num_conts ) #造成垂直方向上字符重叠
 
+        num_conts = random.sample(list(range(5, 15)), 1)[0]
         w_list=random.sample(list(range(int(imgwh[0]/width_char) - 1)), num_conts)
         w_list = [k * width_char for k in w_list]
 
