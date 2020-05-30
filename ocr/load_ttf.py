@@ -1,5 +1,6 @@
 #encoding: utf-8
-import os
+import os, cv2
+import numpy as np
 import PIL.Image as Image
 import PIL.ImageFont as ImageFont
 import PIL.ImageDraw as ImageDraw
@@ -36,14 +37,22 @@ class MYFONT():
         size = font.getsize(txt)
         return offset + size  # x,y,w,h
 
-    def getAlphaNewImage(self, imgwh):
+    def getNewImage(self, imgwh):
         img_w, img_h = imgwh
 
         # pil_img = Image.new('RGBA', (img_w, img_h), (0, 0, 0, 0))
         pil_img = Image.new('RGB', (img_w, img_h), (255, 255, 255))
         return pil_img
 
-    def getTxtPartBase(self, pil_img, txt, txt_cord, txt_font):
+    def getAlphaNewImage(self, imgwh):
+        img_w, img_h = imgwh
+
+        # pil_img = Image.new('RGBA', (img_w, img_h), (255, 255, 255, 255))
+        pil_img = Image.new('RGB', (img_w, img_h), (255, 255, 255))
+        return pil_img
+
+    # def getTxtPartBase(self, pil_img, txt, txt_cord, txt_font):
+    def getTxtPartBase(self, txt, txt_cord, txt_font):
         '''
         将文字写在图片上，白底黑字
         :param imgwh: 目标图分辨率
@@ -52,6 +61,7 @@ class MYFONT():
         :param txt_font: 对应字体
         :return: 结果图
         '''
+        pil_img = self.getAlphaNewImage((txt_cord[0] + txt_cord[2], txt_cord[1] + txt_cord[3]))
         pil_img_draw = ImageDraw.Draw(pil_img)
 
         # for idx in range(len(txts)):
@@ -65,5 +75,6 @@ class MYFONT():
             element = Image.fromarray(cv2.cvtColor(element, cv2.COLOR_BGRA2RGBA))
         if isinstance(src_img, np.ndarray):
             src_img = Image.fromarray(cv2.cvtColor(src_img, cv2.COLOR_BGRA2RGBA))
-        src_img.paste(element, box, element.split()[-1])
+        # src_img.paste(element, box, element.split()[-1])
+        src_img.paste(element, box)
         return src_img
